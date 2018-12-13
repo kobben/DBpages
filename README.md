@@ -20,4 +20,5 @@ SPDX-License-Identifier: GPL-3.0-only
     v3.5 Dec 2018 -- implemented bool (boolean) column type
     v3.2 Dec 2017 -- included img (image) type & simpleLightBox code
     v3.0 Oct 2017 -- now implemented as Python CGI, with py config file
-    v2.1 May 2012 -- includes txt type & sum columns & pw check
+    v2.1 May 2012 -- included txt type & sum columns & pw check
+    v1.0 jan 2012 -- initial version (ASP javascript pages)
