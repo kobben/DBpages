@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="./templates/tablepages.css" rel="stylesheet" type="text/css"/>
+    <title>ERROR</title>
+</head>
+
+<body bgcolor="#FFFFCC" >
+
+<h2>ERROR in {{ errorModule }}</h2>
+<hr>
+{{ errorMessage }}<hr>
+
+<form action="index.py" method="post">
+    <input name="do" type="hidden" value="search"/>
+    <input name="PWfromParam" type="hidden" value="{{td.PWfromParam}}"/>
+    <input type="button" name="goBack" value="TRY AGAIN" onClick="window.history.go(-1);"/>
+    <input type="submit" name="newSearch2" value="Cancel"/>
+</form>
+
+</body>
+</html>

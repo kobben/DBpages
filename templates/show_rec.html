@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link href="./templates/tablepages.css" rel="stylesheet" type="text/css"/>
+<title>{{ pagetitle }}</title>
+    <link href="./templates/simpleLightbox.css" rel="stylesheet" type="text/css" />
+    <script language="javascript" src="./templates/simpleLightbox.js"></script>
+
+<script type="text/javascript">
+
+    function fillDate(theDateField) {
+        theDate = new Date(); //now
+        var DD = theDate.getDate();
+        DD = (DD<10 ? "0"+DD : DD);
+        var MM = theDate.getMonth() + 1;
+        MM = (MM<10 ? "0"+MM : MM);
+        var YYYY = theDate.getFullYear();
+        theDateField.value = DD + "/" + MM + "/" + YYYY;
+    } //function
+
+    function testURI(theURI) {
+        window.open(theURI);
+    } //function
+
+    function testIMG(theURI) {
+        simpleLightbox(theURI, 10, true);
+    } //function
+
+</script>
+</head>
+
+<body bgcolor="#FFFFCC" >
+
+<table>
+    <tr class="plain">
+        <td colspan="3"><h2>DETAILS:</h2></td>
+    </tr>
+
+{#    Loop through the rows: should normally be ONLY ONE!  #}
+{%- for rows in qr -%}
+    {#    Loop through the columns:  #}
+    {%- for i in range(td.numCols) -%}
+
+        {%- if td.colTypeList[i] == 'str' -%}
+            <tr class="plain">
+                <td align="right" valign="baseline"><b><span class="colname">{{ td.colDisplayList[i] }}</span></b>
+                </td>
+
+                <td align="left" valign="baseline" class="style1">
+                    {{ rows[i]|replace(None, '') }}
+                </td>
+            </tr>
+        {%- endif -%}
+
+        {%- if td.colTypeList[i] == 'txt' -%}
+            <tr class="plain">
+                <td align="right" valign="top"><b><span class="colname">{{ td.colDisplayList[i] }}</span></b></td>
+                 {%-  if rows[i] == None -%}
+                     <td></td>
+                 {%-  else -%}
+                    <td >{{ rows[i].replace('\n', '<br>')|safe }}</td>  {# |safe filter to prevent escaping <br> #}
+                 {%-  endif -%}
+            </tr>
+        {%- endif -%}
+
+        {%- if td.colTypeList[i] == 'uri' -%}
+            <tr class="plain">
+                <td align="right" valign="baseline"><b><span class="colname">{{ td.colDisplayList[i] }}</span></b>
+                </td>
+                <td align="left" valign="baseline" class="style1">
+                    <a  onclick="testURI('{{ rows[i]|replace(None, '') }}')" >{{ rows[i]|replace(None, '') }}</a>
+                </td>
+            </tr>
+        {%- endif -%}
+
+        {%- if td.colTypeList[i] == 'img' -%}
+            <tr class="plain">
+                <td align="right" valign="baseline"><b><span class="colname">{{ td.colDisplayList[i] }}</span></b>
+                </td>
+                <td align="left" valign="baseline" class="style1">
+                   {{ rows[i]|replace(None, '') }}
+                    <a  onclick="testIMG('{{ rows[i]|replace(None, '') }}')" > [VIEW]</a>
+                </td>
+            </tr>
+        {%- endif -%}
+
+        {%- if td.colTypeList[i] == 'num' -%}
+            <tr class="plain">
+                <td align="right" valign="baseline"><b><span class="colname">{{ td.colDisplayList[i] }}</span></b>
+                </td>
+
+                <td align="left" valign="baseline" class="style1">
+                    {{ rows[i]|replace(None, '') }}
+                </td>
+            </tr>
+        {%- endif -%}
+
+
+        {%- if td.colTypeList[i] == 'bool' -%}
+            <tr class="plain">
+                <td align="right" valign="baseline"><b><span class="colname">{{ td.colDisplayList[i] }}</span></b></td>
+                {%-  if rows[i] == True -%}
+                     <td ><img src="./templates/true.png" width="18"/></td>
+                {%- else  -%}
+                     <td ><img src="./templates/false.png" width="18" /></td>
+                {%-  endif -%}
+            </tr>
+        {%- endif -%}
+
+
+        {%- if td.colTypeList[i] == 'date' -%}
+            <tr class="plain">
+                <td align="right" valign="baseline"><b><span class="colname">{{ td.colDisplayList[i] }}</span></b>
+                </td>
+                {%-  if rows[i] == None -%}
+                     <td></td>
+                 {%-  else -%}
+                    <td align="left" valign="baseline" class="style1">{{rows[i]}}</td>
+                 {%-  endif -%}
+
+            </tr>
+        {%- endif -%}
+
+        {%- if td.colTypeList[i] == 'fk' -%}
+            <tr class="plain">
+                <td align="right" valign="baseline"><b><span class="colname">{{ td.colDisplayList[i] }}</span></b>
+                </td>
+
+                <td align="left" valign="baseline" class="style1">
+                        {%- if td.LUT[i] == None -%}
+                            <option value="*ERROR in LUT*">*ERROR in LUT*</option>
+                        {%- else -%}
+                            {%- for FK, FKval in td.LUT[i]|sort -%}
+                                {%- if FK == rows[i] -%}
+                                    {{ FKval }}
+                                {%- endif -%}
+                            {%- endfor -%}
+                        {%- endif -%}
+                </td>
+            </tr>
+        {%- endif -%}
+
+        {%- if td.colTypeList[i] == 'fkarray' -%}
+            <tr class="plain">
+                <td align="right" valign="baseline"><b><span class="colname">{{ td.colDisplayList[i] }}</span></b>
+                </td>
+
+
+            {%-  if rows[i] == None -%}
+                 <td></td>
+             {%-  else -%}
+                 {%-  if td.LUT[i] == None -%}
+                     <td >*ERROR in LUT*</td>
+                 {%-  else -%}
+                     <td>
+                     {%-  for FK, FKval in td.LUT[i] -%}
+                         {%-  if FK in rows[i] -%} {#  rows[i] is an array! #}
+                             {{FKval}}
+                         {%-  endif -%}
+                     {%- endfor -%}
+                     </td>
+                 {%-  endif -%}
+             {%-  endif -%}
+            </tr>
+        {%- endif -%}
+
+    {%- endfor -%}
+    {#   ...end of Loop through the columns. #}
+    </tr>
+{%- endfor -%}
+{#   ...end of  Loop through the rows.  #}
+
+</table>
+
+
+<p>
+    <input type="button" name="backtolist" value="previous page" onclick="window.history.go(-1);">
+    <button type="submit" id="cancel" form="cancelForm">new search</button>
+</p>
+
+<form id="cancelForm" name="cancelForm" method="post" action="index.py">
+    <input name="PWfromParam" type="hidden" value="{{ PWfromParam }}"/>
+    <input name="do" type="hidden" value="search"/>
+</form>
+
+
+{##}
+{#{%- if td.canEdit -%}#}
+{#<hr />#}
+{#<form id="form1" name="form1" action="add_rec.asp" method="post">#}
+{#	<input name="PWfromParam" type="hidden" value="{{td.PWfromParam}}"/>#}
+{#	<input type="submit" name="cancelIt" value="ADD records" />#}
+{#</form>#}
+{#{%- endif -%}#}
+
+
+</body>
+</html>

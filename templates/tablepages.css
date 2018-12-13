@@ -1,0 +1,58 @@
+@charset "UTF-8";
+body {
+	background-color: #FFFFCC;
+	font-family:	Verdana,Lucida,Helvetica,Arial,sans-serif;
+	font-size:	12px;
+	font-weight:	400;
+	font-style:	normal;
+	color:	#000000;
+	vertical-align:	baseline;
+	padding: 4px;
+}
+table {
+	font-size:	10px;
+	color:	#000000;
+	vertical-align:	baseline;
+	border-collapse: collapse;
+	background-color: #FFFFCC;
+}
+tr {
+	background-color: #FFFFCC;
+}
+tr:nth-child(even)  {
+	background-color: #FFFF99;
+	border-right:1px solid #FFFFFF;
+}
+tr.plain {
+	background-color: #FFFFCC;
+}
+td {
+    padding: 3px;
+}
+th {
+	background-color: #525252;
+	color: #FFFF99;
+	text-align: left;
+	padding-right: 3px;
+	padding-left: 3px;
+    padding-bottom: 9px;
+    padding-top: 8px;
+}
+.code {
+	font-family: "Courier New", Courier, monospace;
+	font-size: 9px;
+}
+a {
+	text-decoration:none;
+	color: #8f8bc5;
+}
+a:hover {
+	text-decoration:underline;
+	color:#0000FF;
+}
+.big {
+	font-size: 16px;
+}
+.colname {
+	font-weight: bold;
+}

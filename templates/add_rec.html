@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link href="./templates/tablepages.css" rel="stylesheet" type="text/css"/>
+<title>{{ pagetitle }}</title>
+    <link href="./templates/simpleLightbox.css" rel="stylesheet" type="text/css" />
+    <script language="javascript" src="./templates/simpleLightbox.js"></script>
+
+<script type="text/javascript">
+
+    function toggleSQL() {
+        var theSQLinput = document.getElementById("sqlDiv");
+        if (theSQLinput.style.display == "none") {
+            theSQLinput.style.display = "inline";
+        } else {
+            theSQLinput.style.display = "none";
+        }
+        changeSQL();
+    } //function
+
+    function fillDate(theDateField) {
+        theDate = new Date(); //now
+        var DD = theDate.getDate();
+        DD = (DD<10 ? "0"+DD : DD);
+        var MM = theDate.getMonth() + 1;
+        MM = (MM<10 ? "0"+MM : MM);
+        var YYYY = theDate.getFullYear();
+        theDateField.value = DD + "/" + MM + "/" + YYYY
+        changeSQL();
+    } //function
+
+    function testURI(theURIField) {
+        window.open(theURIField.value);
+    } //function
+
+    function testIMG(theURIField) {
+        simpleLightbox(theURIField.value, 10, true);
+    } //function
+
+    function escapeQuotes(theStr) {
+        var regexp = /'/g;
+        theStr = theStr.replace(regexp, "''");
+        return theStr;
+    }
+
+
+    function changeSQL () {
+
+        var theInsertSQL = document.getElementById("insertsql");
+        var theSearchSQL = document.getElementById("sql");
+
+        var theIntoStr = "INTO {{ td.theTable }}";
+        var theColsStr = " ";
+        var theColsExtraStr = "";
+        var theValuesStr = "\nVALUES (";
+        var selectThisRecStr = "\nFROM {{ td.theTable }} WHERE";
+
+
+        {#    Loop through the columns:  #}
+        {%- for i in range(td.numCols) -%}
+
+            {%- if td.colTypeList[i] == 'none' -%}
+                //needed to add 'none' columns to searchSQL but NOT to insertSQL:
+                theColsExtraStr += "{{ td.colList[i] }}, ";
+            {%- endif -%}
+
+            {%- if td.colTypeList[i] == 'str' or td.colTypeList[i] == 'txt' or td.colTypeList[i] == 'img'  or td.colTypeList[i] == 'uri' -%}
+
+                var theSearchStr = document.getElementById("{{ td.colList[i] }}").value;
+                theColsStr += "{{ td.colList[i] }}, ";
+                if (theSearchStr == "" || theSearchStr == undefined) {
+                    theValuesStr += " NULL, ";
+                    selectThisRecStr += " {{ td.colList[i] }}";
+                    selectThisRecStr += " IS NULL AND";
+                } else {
+                    theValuesStr += " '" + escapeQuotes(theSearchStr) + "', ";
+                    {%- if td.colTypeList[i] != 'txt' -%} // dont incldue larege TXT fields}
+                        selectThisRecStr += " {{ td.colList[i] }}";
+                        selectThisRecStr += "='" + escapeQuotes(theSearchStr) + "' AND";
+                    {%- endif -%}
+                }
+
+            {%- endif -%}
+
+            {%-  if td.colTypeList[i] == 'num' -%}
+
+                var theSearchStr = document.getElementById("{{ td.colList[i] }}").value;
+                theColsStr += "{{ td.colList[i] }}, ";
+                selectThisRecStr += " {{ td.colList[i] }}";
+                if (theSearchStr == "" || theSearchStr == undefined) {
+                    theValuesStr += " NULL, ";
+                    selectThisRecStr += " IS NULL AND";
+                } else {
+                    theValuesStr +=  theSearchStr + ", ";
+                    selectThisRecStr += "=" + theSearchStr + " AND";
+                }
+
+            {%- endif -%}
+
+
+
+            {%-  if td.colTypeList[i] == 'bool' -%}
+
+                var theSearchStr = document.getElementById("{{ td.colList[i] }}").value;
+                theColsStr += "{{ td.colList[i] }}, ";
+                selectThisRecStr += " {{ td.colList[i] }}";
+                if (theSearchStr == "" || theSearchStr == undefined) {
+                    theValuesStr += " NULL, ";
+                    selectThisRecStr += " IS NULL AND";
+                } else {
+                    theValuesStr +=  theSearchStr + ", ";
+                    selectThisRecStr += "=" + theSearchStr + " AND";
+                }
+
+            {%- endif -%}
+
+
+
+            {%-  if td.colTypeList[i] == 'date' -%}
+
+                var theSearchStr = document.getElementById("{{ td.colList[i] }}").value;
+                theColsStr += " {{ td.colList[i] }}, ";
+                selectThisRecStr += " {{ td.colList[i] }} ";
+                if (theSearchStr == "" || theSearchStr == " " || theSearchStr == undefined) {
+                    theValuesStr += "NULL, ";
+                    selectThisRecStr += " IS NULL AND ";
+                } else {
+                    theValuesStr += "to_date('" + theSearchStr + "', 'DD/MM/YYYY'), ";
+                    selectThisRecStr += "=to_date('" + theSearchStr + "', 'DD/MM/YYYY') AND ";
+                }
+
+            {%- endif -%}
+
+            {%-  if td.colTypeList[i] == 'fk' -%}
+
+                var theSearchStr = document.getElementById("{{ td.colList[i] }}").value;
+                theColsStr += "{{ td.colList[i] }}, ";
+                selectThisRecStr += " {{ td.colList[i] }} = ";
+                if (theSearchStr == "" || theSearchStr == " " || theSearchStr == undefined) {
+                    theValuesStr += " NULL, ";
+                    selectThisRecStr += " IS NULL AND ";
+                } else {
+                    theValuesStr += theSearchStr + ", ";
+                    selectThisRecStr += theSearchStr + " AND";
+                }
+
+            {%- endif -%}
+
+            {%-  if td.colTypeList[i] == 'fkarray' -%}
+
+                theColsStr += "{{ td.colList[i] }}, ";
+                selectThisRecStr += " {{ td.colList[i] }}=";
+                var theSearchStr = "";
+                var theCheckBoxes = document.getElementsByName("{{ td.colList[i] }}");
+                for (var z=0; z < theCheckBoxes.length; z++) {
+                    if (theCheckBoxes[z].checked) {
+                        theSearchStr += theCheckBoxes[z].value + "," ;
+                    }
+                }
+                theSearchStr = theSearchStr.substring(0,theSearchStr.length-1); //cleaning up last ,
+                theValuesStr += "'{" + theSearchStr + "}', ";
+                selectThisRecStr += "'{" + theSearchStr + "}' AND";
+
+            {%- endif -%}
+
+        {%- endfor -%}
+        {#   ...end of Loop through the columns. #}
+
+        theColsStr = theColsStr.substring(0,theColsStr.length-2); //cleaning up last ,
+        theValuesStr = theValuesStr.substring(0,theValuesStr.length-2) + ")"; //cleaning up last ,
+        selectThisRecStr = selectThisRecStr.substring(0,selectThisRecStr.length-4); //cleaning up last AND
+        theInsertSQL.value = theIntoStr + "\n(" + theColsStr + ") " + theValuesStr + " ";
+        theSearchSQL.value = theColsExtraStr + theColsStr + selectThisRecStr + " ";
+    } //function changeSQL()
+
+</script>
+</head>
+
+<body bgcolor="#FFFFCC" onLoad="changeSQL()">
+
+<form id="inputForm" name="inputForm" action="">
+    <table>
+        <tr class="plain">
+            <td colspan="3"><h2>Add a record:</h2></td>
+        </tr>
+
+        {#    Loop through the columns:  #}
+        {%- for i in range(td.numCols) -%}
+
+            {%- if td.colTypeList[i] == 'str' -%}
+                <tr class="plain">
+                    <td align="right" valign="baseline"><b><span class="colname">{{ td.colDisplayList[i] }}</span></b>
+                    </td>
+
+                    <td align="left" valign="baseline" class="style1">
+                        <input id="{{ td.colList[i] }}" name="{{ td.colList[i] }}" type="text" size="40" maxlength="255"
+                               onChange="changeSQL()"/> (string)
+                    </td>
+                </tr>
+            {%- endif -%}
+
+            {%- if td.colTypeList[i] == 'txt' -%}
+                <tr class="plain">
+                    <td align="right" valign="top"><b><span class="colname">{{ td.colDisplayList[i] }}</span></b></td>
+
+                    <td align="left" valign="baseline" class="style1">
+                    <textarea cols="100%" rows="3" id="{{ td.colList[i] }}" name="{{ td.colList[i] }}" wrap="soft"
+                              onChange="changeSQL()"></textarea> (text)
+                    </td>
+                </tr>
+            {%- endif -%}
+
+            {%- if td.colTypeList[i] == 'uri' -%}
+                <tr class="plain">
+                    <td align="right" valign="baseline"><b><span class="colname">{{ td.colDisplayList[i] }}</span></b>
+                    </td>
+
+                    <td align="left" valign="baseline" class="style1">
+                        <input id="{{ td.colList[i] }}" name="{{ td.colList[i] }}" type="text" size="40" maxlength="255"
+                               value="" onChange="changeSQL()"/>
+                        <a  onclick="testURI({{ td.colList[i] }})" >(URI - click to TEST)</a>
+                    </td>
+                </tr>
+            {%- endif -%}
+
+            {%- if td.colTypeList[i] == 'img' -%}
+                <tr class="plain">
+                    <td align="right" valign="baseline"><b><span class="colname">{{ td.colDisplayList[i] }}</span></b>
+                    </td>
+
+                    <td align="left" valign="baseline" class="style1">
+                        <input id="{{ td.colList[i] }}" name="{{ td.colList[i] }}" type="text" size="40" maxlength="255"
+                               value="" onChange="changeSQL()"/>
+                        <a  onclick="testIMG({{ td.colList[i] }})" >(IMG url - click to PREVIEW)</a>
+                    </td>
+                </tr>
+            {%- endif -%}
+
+            {%- if td.colTypeList[i] == 'num' -%}
+                <tr class="plain">
+                    <td align="right" valign="baseline"><b><span class="colname">{{ td.colDisplayList[i] }}</span></b>
+                    </td>
+
+                    <td align="left" valign="baseline" class="style1">
+                        <input id="{{ td.colList[i] }}" name="{{ td.colList[i] }}" type="text" size="25" maxlength="64"
+                               onChange="changeSQL()"/> (number)
+                    </td>
+                </tr>
+            {%- endif -%}
+
+
+            {%- if td.colTypeList[i] == 'bool' -%}
+                <tr class="plain">
+                    <td align="right" valign="baseline"><b><span class="colname">{{ td.colDisplayList[i] }}</span></b>
+                    </td>
+
+                    <td align="left" valign="baseline" class="style1">
+                        <select id="{{ td.colList[i] }}" name="{{ td.colList[i] }}" onChange="changeSQL()">
+                                    <option value="false" selected>False</option>
+                                    <option value="true" >True</option>
+                        </select>
+                        (True or False)
+                    </td>
+
+                </tr>
+            {%- endif -%}
+
+
+            {%- if td.colTypeList[i] == 'date' -%}
+                <tr class="plain">
+                    <td align="right" valign="baseline"><b><span class="colname">{{ td.colDisplayList[i] }}</span></b>
+                    </td>
+
+                    <td align="left" valign="baseline" class="style1">
+                        <input id="{{ td.colList[i] }}" name="{{ td.colList[i] }}" type="text" size="25" maxlength="64"
+                             value="" onChange="changeSQL()"/>
+                        <a  onclick="fillDate({{ td.colList[i] }})" target="_blank">(DD/MM/YYYY - Click for Today)</a>
+                    </td>
+                </tr>
+            {%- endif -%}
+
+            {%- if td.colTypeList[i] == 'fk' -%}
+                <tr class="plain">
+                    <td align="right" valign="baseline"><b><span class="colname">{{ td.colDisplayList[i] }}</span></b>
+                    </td>
+
+                    <td align="left" valign="baseline" class="style1">
+                        <select id="{{ td.colList[i] }}" name="{{ td.colList[i] }}" onChange="changeSQL()">
+                            <option value="" selected></option>
+                            {%- if td.LUT[i] == None -%}
+                                <option value="*ERROR in LUT*">*ERROR in LUT*</option>
+                            {%- else -%}
+                                {%- for FK, FKval in td.LUT[i]|sort -%}
+                                    <option value="{{ FK }}">{{ FKval }}</option>
+                                {%- endfor -%}
+                            {%- endif -%}
+                        </select>
+                        (choose one)
+                    </td>
+                </tr>
+            {%- endif -%}
+
+            {%- if td.colTypeList[i] == 'fkarray' -%}
+                <tr class="plain">
+                    <td align="right" valign="baseline"><b><span class="colname">{{ td.colDisplayList[i] }}</span></b>
+                    </td>
+
+                    <td align="left" valign="baseline" class="style1">
+                            {%- if td.LUT[i] == None -%}
+                                *ERROR in LUT*
+                            {%- else -%}
+                                {%- for FK, FKval in td.LUT[i]|sort -%}
+                                    <input type="checkbox" name="{{ td.colList[i] }}" value="{{ FKval }}"
+                                           onChange="changeSQL()">{{ FKval }}<br>
+                                {%- endfor -%}
+                            {%- endif -%}
+                        (choose one or more)
+                    </td>
+                </tr>
+            {%- endif -%}
+
+        {%- endfor -%}
+        {#   ...end of Loop through the columns. #}
+        </tr>
+
+    </table>
+</form>
+
+
+<form id="SQLform" name="SQLform" method="post" action="index.py">
+    <input name="do" type="hidden" value="insert"/>
+    <input name="PWfromParam" type="hidden" value="{{ PWfromParam }}"/>
+    <p>
+        <button type="submit" id="submit" form="SQLform">ADD RECORD</button>
+        <button type="reset" id="reset" form="inputForm">RESET</button>
+        <button type="submit" id="cancel" form="cancelForm">CANCEL</button>
+    </p>
+    <div id="sqlDiv" style="display:none" class="code">
+    <textarea name="insertsql" id="insertsql" cols="70" rows="9" wrap="soft">
+    </textarea>
+    <textarea name="sql" id="sql" cols="70" rows="9" wrap="soft">
+    </textarea>
+    </div>
+</form>
+
+<form id="cancelForm" name="cancelForm" method="post" action="index.py">
+    <input name="PWfromParam" type="hidden" value="{{ PWfromParam }}"/>
+    <input name="do" type="hidden" value="search"/>
+</form>
+
+
+</body>
+</html>
