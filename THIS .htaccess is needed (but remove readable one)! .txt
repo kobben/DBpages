@@ -1,0 +1,11 @@
+# Alternate default index pages
+DirectoryIndex index.html
+
+# Deny access to files with extensions .py and .htaccess
+<FilesMatch "\.(py|htaccess|htpasswd)$">
+Order allow,deny
+Deny from all
+</FilesMatch>
+
+
+##### ALSO set chmod 755 to the .py and .htpasswd files in Linux/Unix!!

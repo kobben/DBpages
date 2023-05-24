@@ -1,0 +1,26 @@
+AuthName "Enter editor credentials..."
+## for this test case: un/pw in .htpasswd = editor / test-editor
+# AuthUserFile need to a ABSOLUTE path to .htpasswd file!
+AuthUserFile /data/web_folders/kartoweb/DBpages/.htpasswd
+#AuthUserFile /Users/barendkobben/Sites/DBpages/.htpasswd
+AuthType Basic
+require user editor
+
+# Alternate default index pages
+DirectoryIndex route.py
+
+# Deny access to files with extensions .py and .htaccess
+<FilesMatch "\.(py|htaccess)$">
+	Order allow,deny
+	Deny from all
+</FilesMatch>
+
+# Allow access to and execution of route.py
+<Files "route.py">
+    Allow from all
+    Require user editor
+</Files>
+
+## allow .py to run as Python cgi:
+Options +ExecCGI
+AddHandler cgi-script .py

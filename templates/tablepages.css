@@ -1,0 +1,159 @@
+@charset "UTF-8";
+@font-face {
+  font-family: 'LatoWeb';
+  src: url("LatoLatin-Regular.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'LatoWeb-Bold';
+  src: url("LatoLatin-Bold.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+}
+body {
+	background-color: #FFFFFF;
+	font-family:	"LatoWeb","Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size:	14px;
+	font-weight:	400;
+	font-style:	normal;
+	color:	#000000;
+	vertical-align:	baseline;
+	padding: 4px;
+}
+table {
+	font-size:	14px;
+	color:	#000000;
+	vertical-align:	baseline;
+	border-collapse: collapse;
+	background-color: #FFFFFF;
+}
+.menu {
+	vertical-align: middle;
+	padding: 15px;
+}
+td.colname {
+	background-color: rgb(56, 75, 88);
+	color: #FFFFFF;
+	text-align: right;
+	padding-right: 8px;
+	padding-left: 3px;
+    padding-bottom: 6px;
+    padding-top: 3px;
+}
+th {
+	background-color: rgb(56, 75, 88);
+	color: #FFFFFF;
+	text-align: left;
+	padding-right: 3px;
+	padding-left: 3px;
+    padding-bottom: 9px;
+    padding-top: 8px;
+}
+.tableFixHead {
+	overflow-y: auto;
+}
+.tableFixHead thead th {
+	position: sticky;
+	top: -5px;
+}
+a {
+	text-decoration:none;
+	color: #827eb7;
+}
+a:hover {
+	text-decoration:underline;
+	color: #060bff;
+}
+tr {
+	background-color: #FFFFFF;
+}
+tr:hover {
+	background-color: #606060;
+	color: #ffffff;
+}
+tr:hover a {
+	text-decoration:none;
+	color: #ffffff;
+}
+tr:hover a:hover {
+	text-decoration:underline;
+	color: #f3ff1c;
+}
+tr:nth-child(even)  {
+	background-color: #EEEEEE;
+}
+tr:nth-child(even):hover  {
+	background-color: #606060;
+	color: #ffffff;
+}
+tr.plain {
+	background-color: #FFFFFF;
+	color: #000000;
+}
+tr.plain:hover {
+	background-color: #FFFFFF;
+	color: #000000
+}
+tr.plain:nth-child(even):hover  {
+	background-color: #FFFFFF;
+	color: #000000
+}
+tr.plain:hover a {
+	text-decoration:none;
+	color: #000000;
+}
+tr.plain:hover a:hover {
+	text-decoration:underline;
+	color: #363996;
+}
+td {
+    padding: 3px;
+}
+tr.menu, tr.menu:nth-child(even) {
+	background-color: #EEEEEE;
+	color: #827eb7;
+}
+td.menu {
+	width: 33.3%;
+}
+td.menu:hover {
+	background-color: #888888;
+	color: #FFFFFF;
+}
+.code {
+	font-family: "Courier New", Courier, monospace;
+	font-size: 9px;
+}
+.big {
+	font-size: 16px;
+}
+.bigbutton {
+	background: #f5f5f5;
+	color: #2D3B45;
+	border: 1px solid;
+	border-color: #C7CDD1;
+	border-radius: 3px;
+	transition: background-color 0.2s ease-in-out;
+	display: inline-block;
+	position: relative;
+	padding: 8px 14px;
+	margin-bottom: 0;
+	margin-left: 0px;
+	margin-right:5px;
+	font-size: 1rem;
+	line-height: 14px;
+	text-align: center;
+	vertical-align: middle;
+	cursor: pointer;
+	text-decoration: none;
+	overflow: hidden;
+	text-shadow: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+}
+.bigbutton:hover {
+ background: #384b58;
+ color: #ffffff
+}

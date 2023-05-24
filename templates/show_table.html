@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="../templates/tablepages.css" rel="stylesheet" type="text/css"/>
+    <title>{{pagetitle}}</title>
+    <link href="../templates/simpleLightbox.css" rel="stylesheet" type="text/css" />
+    <script language="javascript" src="../templates/simpleLightbox.js"></script>
+    <script language="javascript" src="../templates/clipboard-polyfill.promise.js"></script>
+    <script language="javascript">
+		function doSubmit(theForm) {
+		    // console.log(theForm.where.value);
+		    var askStr = "Are you sure you want to fully delete the record? \nNote that this can not be reversed...!";
+		    askStr += "\n[" + theForm.where.value + "]";
+			if (confirm(askStr)) {
+				theForm.submit();
+			}
+		}
+		function copyToClipboard() {
+		    var TableStyleStr = "style=\"background-color: #FFFFFF; " +
+                "font-size:14; " +
+                "font-weight: 400; " +
+                "font-style:normal; " +
+                "color:#000000; " +
+                "vertical-align:baseline; " +
+                "padding: 4px; " +
+                "border-collapse: collapse;";
+		    myTable = "<table " + TableStyleStr + ">" + document.getElementById("theDBTable").innerHTML
+                + "</table>";
+		    var dt = new clipboard.DT();
+            dt.setData("text/plain", myTable);
+            dt.setData("text/html", myTable);
+            clipboard.write(dt);
+            alert("Copied table content to the clipboard...");
+        }
+    </script>
+</head>
+
+<body bgcolor="#FFFFCC">
+
+<p>
+<form action="./" method="post">
+    <input name="do" type="hidden" value="search"/>
+
+{%- if (td.interfaceHasHomebutton) -%}
+    <input class="bigbutton" type="button" name="home" value="Home" onClick="window.location='../';"/>
+{%-  endif -%}
+{%- if (td.interfaceHasSearch) -%}
+    <input class="bigbutton" type="button" name="prev2" value="Refine Search" onClick="window.history.go(-1);"/>
+    <input class="bigbutton" type="submit" name="newSearch2" value="New Search"/>
+{%-  endif -%}
+{%- if (td.interfaceHasTablecopy) -%}
+    <input class="bigbutton" type="button" name="CopyToClipBoard" value="Copy Table to Clipboard" onClick="copyToClipboard();"/>
+{%-  endif -%}
+</form>
+</p>
+
+<table id="theDBTable" class="tableFixHead">
+<thead><tr>
+{%- for i in range(td.numCols) -%}
+    {%- if (td.colTypeList[i] != "none") -%}
+        {%- if (td.recView == False) or (td.recView and td.colInTableList[i]) -%}
+            <th align="left">{{td.colDisplayList[i]}}</th>
+        {%-  endif -%}
+    {%-  endif -%}
+{%- endfor -%}
+
+{%- if td.recView -%}
+<th  align='center'>
+    &nbsp;
+</th>
+{%- endif -%}
+
+{%- if td.canEdit -%}
+<th  colspan="2">
+    <form action="./" method="post">
+        <input name="do" type="hidden" value="add"/>
+
+        <input class="bigbutton" name="add" type="submit" value="Add a Record"/>
+    </form>
+</th>
+{%- endif -%}
+</tr></thead>
+
+{#    Loop through the rows:  #}
+{%- for rows in qr -%}
+<tr>
+
+{#    Loop through the columns:  #}
+    {%- for i in range(td.numCols) -%}
+        {%- if (td.recView == False) or (td.recView and td.colInTableList[i]) -%}
+
+            {%-  if td.colTypeList[i] == 'str' -%}
+                 {%-  if rows[i] == None -%}
+                     <td></td>
+                 {%-  else -%}
+                    <td >{{rows[i]}}</td>
+                 {%-  endif -%}
+            {%-  endif -%}
+
+            {%-  if td.colTypeList[i] == 'txt' -%}
+                 {%-  if rows[i] == None -%}
+                     <td></td>
+                 {%-  else -%}
+                    <td >{{ rows[i].replace('\n', '<br>')|safe }}</td>  {# |safe filter to prevent escaping <br> #}
+                 {%-  endif -%}
+            {%-  endif -%}
+
+            {%-  if td.colTypeList[i] == 'uri' -%}
+                {%-  if rows[i] == None -%}
+                     <td></td>
+                 {%-  else -%}
+                    <td ><a target="_blank" href="{{rows[i]}}">LINK</a></td>
+                 {%-  endif -%}
+            {%-  endif -%}
+
+            {%-  if td.colTypeList[i] == 'img' -%}
+                {%-  if rows[i] == None -%}
+                     <td></td>
+                 {%-  else -%}
+                    <td ><a onclick="simpleLightbox('{{rows[i]}}', 10, true)">VIEW</a></td>
+                 {%-  endif -%}
+            {%-  endif -%}
+
+{#   ### NOTE: special code for link to OSISRIS catalogue !!         #}
+            {%-  if td.colTypeList[i] == 'num' -%}
+                {%-  if rows[i] == None -%}
+                     <td></td>
+                  {%-  else -%}
+                      {%-  if td.colDisplayList[i] == 'osiris_code' -%}
+                        <td ><a target="_blank" href="https://osiris.utwente.nl/student/OnderwijsCatalogusZoekCursus.do?cursuscode={{rows[i]}}">{{rows[i]}}</a></td>
+                      {%-  else -%}
+                        <td >{{rows[i]}}</td>
+                      {%-  endif -%}
+                 {%-  endif -%}
+            {%-  endif -%}
+
+            {%-  if td.colTypeList[i] == 'date' -%}
+                {%-  if rows[i] == None -%}
+                     <td></td>
+                 {%-  else -%}
+                    <td >{{rows[i]}}</td>
+                 {%-  endif -%}
+            {%-  endif -%}
+
+            {%-  if td.colTypeList[i] == 'bool' -%}
+                {%-  if rows[i] == True -%}
+                     <td align="center"><img src="../templates/true.png" width="18"/></td>
+                {%- else  -%}
+                     <td align="center"><img src="../templates/false.png" width="18" /></td>
+                {%-  endif -%}
+            {%-  endif -%}
+
+            {%-  if td.colTypeList[i] == 'fk' -%}
+                {%-  if rows[i] == None -%}
+                     <td></td>
+                 {%-  else -%}
+                     {%-  if td.LUT[i] == None -%}
+                         <td >*ERROR in LUT*</td>
+                     {%-  else -%}
+                         {%-  for FK, FKval in td.LUT[i] -%}
+                             {%-  if FK == rows[i] -%}
+                                <td >{{FKval}}</td>
+                             {%-  endif -%}
+                         {%- endfor -%}
+                     {%-  endif -%}
+                 {%-  endif -%}
+            {%-  endif -%}
+
+            {%-  if td.colTypeList[i] == 'fkarray' -%}
+                {%-  if rows[i] == None -%}
+                     <td></td>
+                 {%-  else -%}
+                     {%-  if td.LUT[i] == None -%}
+                         <td >*ERROR in LUT*</td>
+                     {%-  else -%}
+                         <td>
+                         {%-  for FK, FKval in td.LUT[i]|sort -%}
+                             {%-  if FK in rows[i] -%} {#  rows[i] is an array! #}
+                                 {{FKval}} <br/>
+                             {%-  endif -%}
+                         {%- endfor -%}
+                         </td>
+                     {%-  endif -%}
+                 {%-  endif -%}
+            {%-  endif -%}
+
+        {%-  endif -%} {#   ...end of if in Table view. #}
+    {%- endfor -%}
+{#   ...end of Loop through the columns. #}
+
+    {%- if td.recView -%}
+        <td align="center" valign="middle">
+            <form action="./" method="post">
+            <input name="do" type="hidden" value="showrec"/>
+
+            {%- for i in range(td.numCols) -%}
+                {%-  if td.colList[i] == td.myPK -%}
+                    <input type="hidden" name="where" value=" WHERE {{ td.myPK }}={{ rows[i] }} ">
+                {%-  endif -%}
+            {%- endfor -%}
+            <input name="details" type="submit" value="details" />
+          </form>
+        </td>
+    {%-  endif -%}
+
+    {%- if td.canEdit -%}
+        <td align="center" valign="middle">
+            <form action="./" method="post">
+            <input name="do" type="hidden" value="edit"/>
+
+            {%- for i in range(td.numCols) -%}
+                {%-  if td.colList[i] == td.myPK -%}
+                    <input type="hidden" name="where" value=" WHERE {{ td.myPK }}={{ rows[i] }} ">
+                {%-  endif -%}
+            {%- endfor -%}
+            <input name="edit" type="submit" value="edit" />
+          </form>
+        </td>
+        <td align="center" valign="middle">
+          <form id="deleteForm" action="./" method="post" >
+            <input name="do" type="hidden" value="delete"/>
+
+            {%- for i in range(td.numCols) -%}
+                {%-  if td.colList[i] == td.myPK -%}
+                    <input type="hidden" id="delWhere" name="where" value=" WHERE {{ td.myPK }}={{ rows[i] }} ">
+                {%-  endif -%}
+            {%- endfor -%}
+            <input type="hidden" name="sql" value="{{ originalsql }}" />
+            <input type="button" name="del" value="del"  onClick="doSubmit(this.parentElement)"/>
+          </form>
+        </td>
+    {%-  endif -%}
+
+</tr>
+
+{%- endfor -%}
+{#   ...end of Loop through the rows. #}
+
+<tr>
+
+{#    MAKE FOOTER: Loop through the columns:  #}
+{%- for i in range(td.numCols) -%}
+    {%- if (td.recView == False) or (td.recView and td.colInTableList[i]) -%}
+        {%-  if td.colTypeList[i] == 'num' and td.sumCols[i] == True -%}
+            <th align='center'> &sum;= <b> {{ td.colSummed[i] }} </b> </th>
+        {%- elif td.colTypeList[i] != 'none'  -%}
+            <th align='center'></th>
+        {%- else -%}
+            {#  no col = no footer #}
+        {%- endif -%}
+    {%- endif -%}
+{%- endfor -%}
+
+{%- if td.recView -%}
+<th  align='center'>
+    &nbsp;
+</th>
+{%- endif -%}
+
+{%- if td.canEdit -%}
+<th  align='center' colspan="2">
+    <form action="./" method="post">
+        <input name="do" type="hidden" value="add"/>
+
+        <input class="bigbutton" name="add" type="submit" value="Add a Record"/>
+    </form>
+</th>
+{%- endif -%}
+</tr>
+
+<tr>
+{#    MAKE FOOTER 2: count records found  #}
+<th colspan="{{ td.numCols + 1 }}">
+{%- if qr|count >= td.resultLimit -%}
+    Limit of {{ td.resultLimit }} results reached (there may be more records that match your search).
+{%- else -%}
+    {{ qr|count }} records matched your search.
+{%- endif -%}
+</th>
+</tr>
+
+</table>
+
+<p>
+<form action="./" method="post">
+    <input name="do" type="hidden" value="search"/>
+
+{%- if (td.interfaceHasHomebutton) -%}
+    <input class="bigbutton" type="button" name="home" value="Home" onClick="window.location='../';"/>
+{%-  endif -%}
+{%- if (td.interfaceHasSearch) -%}
+    <input class="bigbutton" type="button" name="prev2" value="Refine Search" onClick="window.history.go(-1);"/>
+    <input class="bigbutton" type="submit" name="newSearch2" value="New Search"/>
+{%-  endif -%}
+{%- if (td.interfaceHasTablecopy) -%}
+    <input class="bigbutton" type="button" name="CopyToClipBoard" value="Copy Table to Clipboard" onClick="copyToClipboard();"/>
+{%-  endif -%}
+</form>
+</p>
+
+</body>
+</html>

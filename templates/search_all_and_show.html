@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="../templates/tablepages.css" rel="stylesheet" type="text/css"/>
+    <title>{{ pagetitle }}</title>
+
+    <script type="text/javascript">
+
+        function toggleSQL() {
+            var theSQL = document.getElementById("sqlDiv");
+            if (theSQL.style.display == "none") {
+                theSQL.style.display = "inline";
+            } else {
+                theSQL.style.display = "none";
+            }
+            changeSQL();
+        } //function
+    </script>
+
+
+    <script type="text/javascript">
+
+        function changeSQL() {
+
+            var theSQL = document.getElementById("sql");
+            var theSelectStr = "";
+            var theFromStr = " FROM {{ td.theTable }}";
+            var theWhereStr = "  WHERE ";
+            var theAddDatesStr = "";
+            var theAndOr = document.getElementById("and_or").value;
+
+            {#    Loop through the columns:  #}
+            {%- for i in range(td.numCols) -%}
+
+
+                {%- if td.colTypeList[i] == 'none' -%}
+                    theSelectStr += "{{ td.colList[i] }}, ";
+                {%- endif -%}
+
+                {%- if td.colTypeList[i] == 'str' or td.colTypeList[i] == 'txt' or td.colTypeList[i] == 'eml'
+                   or td.colTypeList[i] == 'uri' or td.colTypeList[i] == 'file' or td.colTypeList[i] == 'img' -%}
+
+                    theSelectStr += "{{ td.colList[i] }}, ";
+                    theOp = document.getElementById("op{{ i }}").value;
+                    var theSearchStr = document.getElementById("{{ td.colList[i] }}").value;
+                    if (theSearchStr != "") {
+                        if (theOp == "equals") {
+                            theWhereStr += "{{ td.colList[i] }} ILIKE '" + theSearchStr + "' " + theAndOr;
+                        }
+                        if (theOp == "contains") {
+                            theWhereStr += "{{ td.colList[i] }} ILIKE '%" + theSearchStr + "%' " + theAndOr;
+                        }
+                        if (theOp == "notcontains") {
+                            theWhereStr += "{{ td.colList[i] }} NOT ILIKE '%" + theSearchStr + "%' " + theAndOr;
+                        }
+                        if (theOp == "beginswith") {
+                            theWhereStr += "{{ td.colList[i] }} ILIKE '" + theSearchStr + "%' " + theAndOr;
+                        }
+                        if (theOp == "endswith") {
+                            theWhereStr += "{{ td.colList[i] }} ILIKE '%" + theSearchStr + "' " + theAndOr;
+                        }
+                    } else { // (theSearchStr === "")
+                        if (theOp == "isempty") {
+                            theWhereStr += "( {{ td.colList[i] }} IS NULL OR " +
+                                "{{ td.colList[i] }} = ' ') " + theAndOr;
+                        }
+                        if (theOp == "isnotempty") {
+                            theWhereStr += "( {{ td.colList[i] }} IS NOT NULL AND " +
+                                "{{ td.colList[i] }} <> ' ') " + theAndOr;
+                        }
+                    }
+
+                {%- endif -%}
+
+                {%-  if td.colTypeList[i] == 'num' -%}
+
+                    theSelectStr += "{{ td.colList[i] }}, ";
+                    theOp = document.getElementById("op{{ i }}").value;
+                    var theSearchStr = document.getElementById("{{ td.colList[i] }}").value;
+                    if (theSearchStr != "") {
+                        theWhereStr += "{{ td.colList[i] }} " + theOp + " " + theSearchStr + " " + theAndOr;
+                    }
+
+                {%- endif -%}
+
+
+                {%-  if td.colTypeList[i] == 'bool' -%}
+
+                    theSelectStr += "{{ td.colList[i] }}, ";
+                    var theSearchStr = document.getElementById("{{ td.colList[i] }}").value;
+                    if (theSearchStr != "") {
+                        theWhereStr += "{{ td.colList[i] }}" + " = " + theSearchStr + " " + theAndOr;
+                    }
+
+                {%- endif -%}
+
+
+                {%-  if td.colTypeList[i] == 'date' -%}
+
+                    {#//if date, request twice, once as date, once as str:#}
+                    theAddDatesStr += "{{ td.colList[i] }} AS {{ td.colList[i] }}_date, ";
+                    theSelectStr += "to_char({{ td.colList[i] }}, 'DD/MM/YYYY') AS {{ td.colList[i] }}, ";
+                    theOp = document.getElementById("op{{ i }}").value;
+                    var theSearchStr = document.getElementById("{{ td.colList[i] }}").value;
+                    {#// *** v4.1: changed WHERE to search for normal dateField, not dateField_date#}
+                    if (theSearchStr != "") {
+                        theWhereStr += "{{ td.colList[i] }} " + theOp + " to_date('" + theSearchStr + "', 'DD/MM/YYYY') " + theAndOr;
+                    }
+
+                {%- endif -%}
+
+                {%-  if td.colTypeList[i] == 'fk' -%}
+
+                    theSelectStr += "{{ td.colList[i] }}, ";
+                    theOp = document.getElementById("op{{ i }}").value;
+                    var theSearchStr = document.getElementById("{{ td.colList[i] }}").value;
+                    if (theSearchStr != "") {
+                        theWhereStr += "{{ td.colList[i] }} " + theOp + " " + theSearchStr + " " + theAndOr;
+                    }
+
+                {%- endif -%}
+
+                {%-  if td.colTypeList[i] == 'fkarray' -%}
+
+                    theSelectStr += "{{ td.colList[i] }}, ";
+                    theOp = document.getElementById("op{{ i }}").value;
+                    //alert(theOp);
+                    var theSearchStr = document.getElementById("{{ td.colList[i] }}").value;
+                    if (theSearchStr != "") {
+                        if (theOp == "EMPTY") {
+                            theWhereStr += "( ({{ td.colList[i] }}) = '{}' OR ({{ td.colList[i] }}) IS NULL ) " + theAndOr;
+                        } else if (theOp == "NOT") {
+                            theWhereStr += "(NOT " + theSearchStr + " = ANY ({{ td.colList[i] }})) " + theAndOr;
+                        } else {
+                            theWhereStr += theSearchStr + " = " + theOp + " ({{ td.colList[i] }}) " + theAndOr;
+                        }
+                    }
+                {%- endif -%}
+
+            {%- endfor -%}
+            {#   ...end of Loop through the columns. #}
+
+            var lastAndOr;
+            if (theAndOr == "AND ") {
+                lastAndOr = theWhereStr.lastIndexOf("AND");
+            } else {
+                lastAndOr = theWhereStr.lastIndexOf("OR");
+            }
+            theWhereStr = theWhereStr.substring(0, lastAndOr);
+
+            var theDefaultSortStr = "{{ td.defaultOrder }}";
+            if (theDefaultSortStr == '') {
+                theDefaultSortStr = "{{ td.myPK }}"
+            }
+            var theSortStr = document.getElementById("sortIt").value;
+            if (theSortStr != "") {
+                theSortStr = "  ORDER BY " + theSortStr + ", " + theDefaultSortStr;
+            } else {
+                theSortStr = "  ORDER BY " + theDefaultSortStr;
+            }
+
+            theSelectStr += theAddDatesStr; // add additional selects for dates AS data
+            theSelectStr = theSelectStr.substring(0, theSelectStr.length - 2); // remove , from last one...
+            theSQL.value = theSelectStr + theFromStr + theWhereStr + theSortStr + " ";
+
+        } //function changeSQL()
+
+        function goShowAll() {
+            changeSQL(); // to get all params from the table.
+            // immediately submit with default search attribs
+            console.log("submitting form...");
+            document.getElementById("goShow").submit();
+        }
+
+
+    </script>
+</head>
+
+<body bgcolor="#FFFFCC" onLoad="goShowAll()" >
+
+{%- if (td.interfaceHasHomebutton) -%}
+    <input class="bigbutton" type="button" name="home" value="Home" onClick="window.location='../';"/>
+{%- endif -%}
+<button class="bigbutton" type="reset" name="reset2" form="criteria" id="reset">Clear Form</button>
+<input class="bigbutton" type="submit" form="show" name="submit2" value="START SEARCH"/>
+
+<form id="criteria" name="criteria">
+    <table>
+
+
+        <tr class="plain">
+            <td colspan="3"><h2>Search criteria:</h2></td>
+        </tr>
+
+        {#    Loop through the columns:  #}
+        {%- for i in range(td.numCols) -%}
+
+            {%- if td.colTypeList[i] == 'str' or td.colTypeList[i] == 'txt' or td.colTypeList[i] == 'eml'
+        or td.colTypeList[i] == 'uri'  or td.colTypeList[i] == 'img'-%}
+                <tr class="plain">
+                    <td align="right" valign="baseline"><b><span>{{ td.colDisplayList[i] }}</span></b></td>
+                    <td align="right" valign="baseline">
+                        <select name="op{{ i }}" id="op{{ i }}" onChange="changeSQL()">
+                            <option value="equals">equals</option>
+                            <option value="contains" selected>contains</option>
+                            <option value="notcontains">not contains</option>
+                            <option value="beginswith">begins with</option>
+                            <option value="endswith">ends with</option>
+                            <option value="isempty">is empty</option>
+                            <option value="isnotempty">is not empty</option>
+                        </select></td>
+                    <td align="left" valign="baseline">
+                        <input id="{{ td.colList[i] }}" name="{{ td.colList[i] }}" type="text" size="40" maxlength="255"
+                               onChange="changeSQL()"/></td>
+                </tr>
+            {%- endif -%}
+
+            {%- if td.colTypeList[i] == 'num' -%}
+                <tr class="plain">
+                    <td align="right" valign="baseline"><b><span>{{ td.colDisplayList[i] }}</span></b></td>
+                    <td align="right" valign="baseline">
+                        <select name="op{{ i }}" id="op{{ i }}" onChange="changeSQL()">
+                            <option value="=" selected>=</option>
+                            <option value="<">&lt;</option>
+                            <option value=">">&gt;</option>
+                            <option value="<>">&ne;</option>
+                        </select></td>
+                    <td align="left" valign="baseline">
+                        <input id="{{ td.colList[i] }}" name="{{ td.colList[i] }}" type="text" size="25" maxlength="64"
+                               onChange="changeSQL()"/></td>
+                </tr>
+            {%- endif -%}
+
+            {%- if td.colTypeList[i] == 'bool' -%}
+                <tr class="plain">
+                    <td align="right" valign="baseline"><b><span>{{ td.colDisplayList[i] }}</span></b></td>
+                    <td align="right" valign="baseline">
+                        is
+                    </td>
+                    <td align="left" valign="baseline">
+                        <select id="{{ td.colList[i] }}" name="{{ td.colList[i] }}" onChange="changeSQL()">
+                            <option value="" selected></option>
+                            <option value="FALSE">FALSE</option>
+                            <option value="TRUE">TRUE</option>
+                        </select>
+                    </td>
+                </tr>
+            {%- endif -%}
+
+            {%- if td.colTypeList[i] == 'file' -%}
+                <tr class="plain">
+                    <td align="right" valign="baseline"><b><span>{{ td.colDisplayList[i] }}</span></b></td>
+                    <td align="right" valign="baseline">
+                        is
+                    </td>
+                    <td>
+                        <select name="op{{ i }}" id="op{{ i }}" onChange="changeSQL()">
+                            <option value="" selected></option>
+                            <option value="isempty">NOT archived</option>
+                            <option value="isnotempty">archived</option>
+                        </select>
+                    </td>
+                    <td align="left" valign="baseline">
+                        <input id="{{ td.colList[i] }}" name="{{ td.colList[i] }}" type="hidden" size="40"
+                               maxlength="255"
+                               onChange="changeSQL()"/></td>
+                </tr>
+            {%- endif -%}
+
+            {%- if td.colTypeList[i] == 'date' -%}
+                <tr class="plain">
+                    <td align="right" valign="baseline"><b><span>{{ td.colDisplayList[i] }}</span></b></td>
+                    <td align="right" valign="baseline">
+                        <select name="op{{ i }}" id="op{{ i }}" onChange="changeSQL()">
+                            <option value="=">at</option>
+                            <option value="<" selected>before</option>
+                            <option value=">">after</option>
+                            <option value="<>">not at</option>
+                        </select></td>
+                    <td align="left" valign="baseline">
+                        <input id="{{ td.colList[i] }}" name="{{ td.colList[i] }}" type="text" size="25" maxlength="64"
+                               onChange="changeSQL()"/> DD/MM/YYYY
+                    </td>
+                </tr>
+            {%- endif -%}
+
+            {%- if td.colTypeList[i] == 'fk' -%}
+                <tr class="plain">
+                    <td align="right" valign="baseline"><b><span>{{ td.colDisplayList[i] }}</span></b></td>
+                    <td align="right" valign="baseline">
+                        <select name="op{{ i }}" id="op{{ i }}" onChange="changeSQL()">
+                            <option value="=" selected>is</option>
+                            <option value="<>">is not</option>
+                        </select></td>
+                    <td align="left" valign="baseline">
+                        <select id="{{ td.colList[i] }}" name="{{ td.colList[i] }}" onChange="changeSQL()">
+                            <option value="" selected></option>
+                            {%- if td.LUT[i] == None -%}
+                                <option value="*ERROR in LUT*">*ERROR in LUT*</option>
+                            {%- else -%}
+                                {%- for FK, FKval in td.LUT[i]|sort -%}
+                                    <option value="{{ FK }}">{{ FKval }}</option>
+                                {%- endfor -%}
+                            {%- endif -%}
+                        </select>
+                    </td>
+                </tr>
+            {%- endif -%}
+
+            {%- if td.colTypeList[i] == 'fkarray' -%}
+                <tr class="plain">
+                    <td align="right" valign="baseline"><b><span>{{ td.colDisplayList[i] }}</span></b></td>
+                    <td align="right" valign="baseline">
+                        <select name="op{{ i }}" id="op{{ i }}" onChange="changeSQL()">
+                            <option value="ANY" selected>contains</option>
+                            <option value="NOT">does not contain</option>
+                            <option value="ALL">is exclusively</option>
+                            <option value="EMPTY">is empty</option>
+                        </select></td>
+                    <td align="left" valign="baseline">
+                        <select id="{{ td.colList[i] }}" name="{{ td.colList[i] }}" onChange="changeSQL()">
+                            <option value="" selected></option>
+                            {%- if td.LUT[i] == None -%}
+                                <option value="*ERROR in LUT*">*ERROR in LUT*</option>
+                            {%- else -%}
+                                {%- for FK, FKval in td.LUT[i]|sort -%}
+                                    <option value="{{ FK }}">{{ FKval }}</option>
+                                {%- endfor -%}
+                            {%- endif -%}
+                        </select>
+                    </td>
+                </tr>
+            {%- endif -%}
+
+
+        {%- endfor -%}
+        {#   ...end of Loop through the columns. #}
+        </tr>
+
+    </table>
+</form>
+
+<p>
+    <span>Sort results by: </span>
+    <select name="sortIt" id="sortIt" onChange="changeSQL()">
+        <option value="" selected>*not sorted*</option>
+        {#    Loop through the columns:  #}
+        {%- for i in range(td.numCols) -%}
+            {%- if td.colTypeList[i] == 'date' -%}
+                <option value="{{ td.colList[i] }}_date ASC">{{ td.colDisplayList[i] }} (ascending)</option>
+                <option value="{{ td.colList[i] }}_date DESC">{{ td.colDisplayList[i] }} (descending)</option>
+            {%- elif td.colTypeList[i] == 'none' -%}
+                {# no entry #}
+            {%- else -%}
+                <option value="{{ td.colList[i] }} ASC">{{ td.colDisplayList[i] }} (ascending)</option>
+                <option value="{{ td.colList[i] }} DESC">{{ td.colDisplayList[i] }} (descending)</option>
+            {%- endif -%}
+        {%- endfor -%}
+    </select>
+</p>
+
+<p>
+    <b>Search for records that:</b>
+    <select name="and_or" id="and_or" onChange="changeSQL()">
+        <option value="AND " selected> comply to all search criteria (logical AND)</option>
+        <option value="OR "> comply to at least one of the search criteria (logical OR)</option>
+    </select>
+    <br/>
+    (Leave empty all fields you do not want to use as search criteria...)
+</p>
+
+
+<form id="goShow" name="goShow" method="post" action="">
+    <input name="do" type="hidden" value="show"/>
+    <input type="submit" value="START SEARCH"/>
+    <button type="reset" name="reset" form="criteria" id="reset">RESET</button>
+    <div id="sqlDiv" style="display:none" class="code">
+    <textarea name="sql" id="sql" cols="70" rows="9" wrap="soft">
+    </textarea>
+    </div>
+</form>
+<hr>
+
+
+
+{%- if td.canEdit -%}
+    <form action="" method="post">
+        <input name="do" type="hidden" value="add"/>
+        <input name="PWfromParam" type="hidden" value="{{ td.PWfromParam }}"/>
+        <input class="bigbutton" name="add" type="submit" value="Add a Record"/>
+    </form>
+{%- endif -%}
+
+
+</body>
+</html>

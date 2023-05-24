@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="../templates/tablepages.css" rel="stylesheet" type="text/css"/>
+    <title>ERROR</title>
+</head>
+
+<body >
+
+<h3>ERROR in {{ errorModule }}</h3>
+<hr>
+{{ errorMessage }}<hr>
+
+<form action="./" method="post">
+    <input name="do" type="hidden" value="search"/>
+    <input class="bigbutton" type="button" name="goBack" value="Try Again" onClick="window.history.go(-1);"/>
+    <input class="bigbutton" type="submit" name="newSearch2" value="Cancel"/>
+</form>
+
+</body>
+</html>

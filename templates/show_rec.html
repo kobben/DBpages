@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link href="../templates/tablepages.css" rel="stylesheet" type="text/css"/>
+<title>{{ pagetitle }}</title>
+    <link href="../templates/simpleLightbox.css" rel="stylesheet" type="text/css" />
+    <script language="javascript" src="../templates/simpleLightbox.js"></script>
+    <script language="javascript" src="../templates/clipboard-polyfill.promise.js"></script>
+    <script language="javascript">
+		function copyToClipboard() {
+		    var TableStyleStr = "style=\"background-color: #FFFFFF; " +
+                "font-size:14; " +
+                "font-weight: 400; " +
+                "font-style:normal; " +
+                "color:#000000; " +
+                "vertical-align:baseline; " +
+                "padding: 4px; " +
+                "border-collapse: collapse;";
+		    myTable = "<table " + TableStyleStr + ">" + document.getElementById("theDBTable").innerHTML
+                + "</table>";
+		    var dt = new clipboard.DT();
+            dt.setData("text/plain", myTable);
+            dt.setData("text/html", myTable);
+            clipboard.write(dt);
+            alert("Copied table content to the clipboard...");
+        }
+        function testURI(theURI) {
+            window.open(theURI);
+        } //function
+
+        function testIMG(theURI) {
+            simpleLightbox(theURI, 10, true);
+        } //function
+
+    </script>
+</head>
+
+<body bgcolor="#FFFFCC" >
+
+
+<p>
+{%- if (td.interfaceHasHomebutton) -%}
+    <input class="bigbutton" type="button" name="home" value="Home" onClick="window.location='../';"/>
+{%-  endif -%}
+{%- if (td.interfaceHasSearch) -%}
+    <input class="bigbutton" type="submit" form="cancelForm" name="newSearch" value="New Search" />
+{%-  endif -%}
+{%- if (td.interfaceHasTablecopy) -%}
+    <input class="bigbutton" type="button" name="CopyToClipBoard" value="Copy Table to Clipboard" onClick="copyToClipboard();"/>
+{%-  endif -%}
+<input class="bigbutton" type="button" name="backtolist" value="Back to Table" onclick="window.history.go(-1);">
+<form id="cancelForm" name="cancelForm" method="post" action="">
+    <input name="do" type="hidden" value="search"/>
+</form>
+
+
+<table id="theDBTable">
+    <tr><th></th></tr>
+{#    Loop through the rows: should normally be ONLY ONE!  #}
+{%- for rows in qr -%}
+    {#    Loop through the columns:  #}
+    {%- for i in range(td.numCols) -%}
+
+        {%- if td.colTypeList[i] == 'str' -%}
+            <tr >
+                <td class="colname" valign="baseline">{{ td.colDisplayList[i] }} 
+                </td>
+
+                <td align="left" valign="baseline" class="style1">
+                    {{ rows[i]|replace(None, '') }}
+                </td>
+            </tr>
+        {%- endif -%}
+
+        {%- if td.colTypeList[i] == 'txt' -%}
+        <tr >
+            <td class="colname" valign="top">{{ td.colDisplayList[i] }} </td>
+            {%-  if rows[i] == None -%}
+            <td></td>
+            {%-  else -%}
+            <td >{{ rows[i]|replace('\n', '<br>')|safe }}</td>  {# |safe filter to prevent escaping <br> #}
+            {%-  endif -%}
+        </tr>
+        {%- endif -%}
+
+        {%- if td.colTypeList[i] == 'json' -%}
+        <tr >
+            <td class="colname" valign="top">{{ td.colDisplayList[i] }} </td>
+            {%-  if rows[i] == None -%}
+            <td></td>
+            {%-  else -%}
+            <td >{{ rows[i]|replace('\'', '"') }}</td>
+            {%-  endif -%}
+        </tr>
+        {%- endif -%}
+
+        {%- if td.colTypeList[i] == 'uri' -%}
+            <tr >
+                <td class="colname" valign="baseline">{{ td.colDisplayList[i] }} 
+                </td>
+                <td align="left" valign="baseline" class="style1">
+                    <a  href="{{ rows[i]|replace(None, '') }}" target="_blank">{{ rows[i]|replace(None, '') }}</a>
+                </td>
+            </tr>
+        {%- endif -%}
+
+        {%- if td.colTypeList[i] == 'img' -%}
+            <tr >
+                <td class="colname" valign="baseline">{{ td.colDisplayList[i] }} 
+                </td>
+                <td align="left" valign="baseline" class="style1">
+                   {{ rows[i]|replace(None, '') }}
+                    <a  onclick="testIMG('{{ rows[i]|replace(None, '') }}')" > [VIEW]</a>
+                </td>
+            </tr>
+        {%- endif -%}
+
+        {%- if td.colTypeList[i] == 'num' -%}
+            <tr >
+                <td class="colname" valign="baseline">{{ td.colDisplayList[i] }} 
+                </td>
+
+                <td align="left" valign="baseline" class="style1">
+                    {{ rows[i]|replace(None, '') }}
+                </td>
+            </tr>
+        {%- endif -%}
+
+		{%- if td.colTypeList[i] == 'bool' -%}
+            <tr >
+                <td class="colname" valign="baseline">{{ td.colDisplayList[i] }} </td>
+                {%-  if rows[i] == True -%}
+                     <td ><img src="../templates/true.png" width="18"/></td>
+                {%- else  -%}
+                     <td ><img src="../templates/false.png" width="18" /></td>
+                {%-  endif -%}
+            </tr>
+        {%- endif -%}
+
+
+        {%- if td.colTypeList[i] == 'date' -%}
+            <tr >
+                <td class="colname" valign="baseline">{{ td.colDisplayList[i] }} 
+                </td>
+                {%-  if rows[i] == None -%}
+                     <td></td>
+                 {%-  else -%}
+                    <td align="left" valign="baseline" class="style1">{{rows[i]}}</td>
+                 {%-  endif -%}
+
+            </tr>
+        {%- endif -%}
+
+        {%- if td.colTypeList[i] == 'fk' -%}
+            <tr >
+                <td class="colname" valign="baseline">{{ td.colDisplayList[i] }} 
+                </td>
+
+                <td align="left" valign="baseline" class="style1">
+                        {%- if td.LUT[i] == None -%}
+                            <option value="*ERROR in LUT*">*ERROR in LUT/FK*</option>
+                        {%- else -%}
+                            {%- for FK, FKval in td.LUT[i]|sort -%}
+                                {%- if FK == rows[i] -%}
+                                    {{ FKval }}
+                                {%- endif -%}
+                            {%- endfor -%}
+                        {%- endif -%}
+                </td>
+            </tr>
+        {%- endif -%}
+
+        {%- if td.colTypeList[i] == 'fkarray' -%}
+            <tr >
+                <td class="colname" valign="baseline">{{ td.colDisplayList[i] }} 
+                </td>
+
+
+            {%-  if rows[i] == None -%}
+                 <td></td>
+             {%-  else -%}
+                 {%-  if td.LUT[i] == None -%}
+                     <td >*ERROR in LUT/FK*</td>
+                 {%-  else -%}
+                     <td>
+                     {%-  for FK, FKval in td.LUT[i]|sort -%}
+                         {%-  if FK in rows[i] -%} {#  rows[i] is an array! #}
+                             {{FKval}} <br/>
+                         {%-  endif -%}
+                     {%- endfor -%}
+                     </td>
+                 {%-  endif -%}
+             {%-  endif -%}
+            </tr>
+    {%- endif -%}
+
+    {%- endfor -%}
+    {# ...end of Loop through the columns. #}
+
+    {%- if td.canEdit -%}
+    <tr>
+            <td class="colname" valign="middle">
+                <form action="" method="post">
+                <input name="do" type="hidden" value="edit"/>
+
+                {%- for i in range(td.numCols) -%}
+                    {%-  if td.colList[i] == td.myPK -%}
+                        <input type="hidden" name="where" value=" WHERE {{ td.myPK }}={{ rows[i] }} ">
+                    {%-  endif -%}
+                {%- endfor -%}
+                <input class="bigbutton" name="edit" type="submit" value="EDIT this record" />
+              </form>
+            </td>
+        </tr>
+    {%-  endif -%}
+
+{%- endfor -%}
+
+
+
+{#   ...end of  Loop through the rows.  #}
+
+</table>
+<p>
+    {%- if (td.interfaceHasHomebutton) -%}
+    <input class="bigbutton" type="button" name="home" value="Home" onClick="window.location='../';"/>
+    {%-  endif -%}
+    {%- if (td.interfaceHasSearch) -%}
+    <input class="bigbutton" type="submit" form="cancelForm" name="newSearch" value="New Search" />
+    {%-  endif -%}
+    {%- if (td.interfaceHasTablecopy) -%}
+    <input class="bigbutton" type="button" name="CopyToClipBoard" value="Copy Table to Clipboard" onClick="copyToClipboard();"/>
+    {%-  endif -%}
+    <input class="bigbutton" type="button" name="backtolist" value="Back to Table" onclick="window.history.go(-1);">
+<form id="cancelForm" name="cancelForm" method="post" action="">
+    <input name="do" type="hidden" value="search"/>
+</form>
+</p>
+
+
+</body>
+</html>

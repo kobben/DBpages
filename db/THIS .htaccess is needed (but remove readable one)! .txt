@@ -1,0 +1,18 @@
+# Alternate default index pages
+DirectoryIndex route.py
+
+# Deny access to files with extensions .py and .htaccess
+<FilesMatch "\.(py|htaccess|htpasswd)$">
+	Order allow,deny
+	Deny from all
+</FilesMatch>
+
+# Allow access to and execution of route.py
+<Files "route.py">
+    Allow from all
+    Require all granted
+</Files>
+
+## allow .py to run as Python cgi:
+Options +ExecCGI
+AddHandler cgi-script .py
