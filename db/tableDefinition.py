@@ -19,7 +19,7 @@ theTable = 'leden'
 canEdit = False
 
 # 4: maximum number of recs shown in result tables:
-resultLimit = 250
+resultLimit = 100
 
 # 5: only table view (False) or also detailed rec view (True)
 recView = False

@@ -56,7 +56,20 @@
 </p>
 
 <table id="theDBTable" class="tableFixHead">
-<thead><tr>
+<thead>
+
+<tr>
+{#    MAKE header line 1: count records found  #}
+<th colspan="{{ td.numCols + 1 }}">
+{%- if qr|count >= td.resultLimit -%}
+    First {{ td.resultLimit }} results shown (there may be more records that match your search).
+{%- else -%}
+    {{ qr|count }} records matched your search.
+{%- endif -%}
+</th>
+</tr>
+
+<tr>
 {%- for i in range(td.numCols) -%}
     {%- if (td.colTypeList[i] != "none") -%}
         {%- if (td.recView == False) or (td.recView and td.colInTableList[i]) -%}
@@ -76,11 +89,13 @@
     <form action="./" method="post">
         <input name="do" type="hidden" value="add"/>
 
-        <input class="bigbutton" name="add" type="submit" value="Add a Record"/>
+        <input class="bigbutton" name="add" type="submit" value="Add Record"/>
     </form>
 </th>
 {%- endif -%}
-</tr></thead>
+</tr>
+
+</thead>
 
 {#    Loop through the rows:  #}
 {%- for rows in qr -%}
@@ -262,8 +277,7 @@
 <th  align='center' colspan="2">
     <form action="./" method="post">
         <input name="do" type="hidden" value="add"/>
-
-        <input class="bigbutton" name="add" type="submit" value="Add a Record"/>
+        <input class="bigbutton" name="add" type="submit" value="Add Record"/>
     </form>
 </th>
 {%- endif -%}
